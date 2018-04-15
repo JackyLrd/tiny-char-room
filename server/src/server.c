@@ -23,6 +23,7 @@ int main()
 {
 	pthread_t tid;
 	int err;
+
 	// initialize list head;
 	head.sockfd = -1;
 	head.port = 0;
@@ -91,11 +92,14 @@ void* func(void *args)
 {
 	struct CLIENT* client = (struct CLIENT*)args;
 	process(client);
+
+	// delete the client
 	client->pre_client->next_client = client->next_client;
 	if (client->next_client)
 		client->next_client->pre_client = client->pre_client;
 	free(client);
 	client = NULL;
+
 	pthread_exit(NULL);
 }
 
@@ -105,18 +109,22 @@ void process(struct CLIENT* client)
 	struct CLIENTMSG sendMSG;
 	struct CLIENTMSG recvMSG;
 
+	// send ok to the client
 	sendMSG.op = OK;
 	send(client->sockfd, &sendMSG, sizeof(sendMSG), 0);
 
+	// processing loop
 	while (1)
 	{
 		bzero(&sendMSG, sizeof(sendMSG));
 		bzero(&recvMSG, sizeof(recvMSG));
 
+		// get message
 		len = recv(client->sockfd, &recvMSG, sizeof(recvMSG), 0);
-		if (len == 0)
+		if (len == 0) // client connection closed
 		{
 			sendMSG.op = EXIT;
+			// tell all clients that a client quit
 			struct CLIENT* temp = head.next_client;
 			while (temp != NULL)
 			{
@@ -124,19 +132,21 @@ void process(struct CLIENT* client)
 					send(temp->sockfd, &sendMSG, sizeof(sendMSG), 0);
 				temp = temp->next_client;
 			}
+			break;
 		}
 		if (len > 0)
 		{
-			if (recvMSG.op == USER)
+			if (recvMSG.op == USER) // new client
 			{
 				sendMSG.op = USER;
 				memcpy(client->user_name, recvMSG.user_name, strlen(recvMSG.user_name));
 				printf("user %s login from %s:%d\n", client->user_name, inet_ntoa(client->client_addr.sin_addr), ntohs(client->client_addr.sin_port));
 			}
-			if (recvMSG.op == EXIT)
+			if (recvMSG.op == EXIT) // client quit
 			{
 				sendMSG.op = EXIT;
 				memcpy(sendMSG.user_name, client->user_name, strlen(recvMSG.user_name));
+				// tell all clients
 				struct CLIENT *temp = head.next_client;
 				while (temp != NULL)
 				{
@@ -145,13 +155,14 @@ void process(struct CLIENT* client)
 				}
 				break;
 			}
-			if (recvMSG.op == MSG)
+			if (recvMSG.op == MSG) // normal message received
 			{
-				printf("%s: %s\n", recvMSG.user_name, recvMSG.buf);
 				sendMSG.op = MSG;
+				printf("%s: %s\n", recvMSG.user_name, recvMSG.buf);
 			}
 			memcpy(sendMSG.user_name, recvMSG.user_name, strlen(recvMSG.user_name));
 			memcpy(sendMSG.buf, recvMSG.buf, strlen(recvMSG.buf));
+			// send the received message to all clients
 			struct CLIENT *temp = head.next_client;
 			while (temp != NULL)
 			{
@@ -162,5 +173,3 @@ void process(struct CLIENT* client)
 		}
 	}
 }
-
-//192.168.1.223:12345

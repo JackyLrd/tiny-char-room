@@ -45,9 +45,10 @@ int main()
 	int len = recv(client_fd, &sendMSG, sizeof(sendMSG), 0);
 	if (len > 0)
 	{
-		if (sendMSG.op == OK)
+		if (sendMSG.op == OK) // get ok from the server
 		{
 			bzero(&sendMSG, sizeof(sendMSG));
+			// send client name to the server
 			printf("please input client name: ");
 			fgets(sendMSG.user_name, CLIENT_NAME_LENGTH, stdin);
 			char* find;
@@ -57,10 +58,12 @@ int main()
 			sendMSG.op = USER;
 			send(client_fd, &sendMSG, sizeof(sendMSG), 0);
 
+			// create thread to show the messages
 			args = (struct client_args*)malloc(sizeof(struct client_args));
 			args->client_fd = client_fd;
 			pthread_create(&tid, NULL, func, (void*)args);
 
+			// read the client input
 			while (1)
 			{
 				sendMSG.op = MSG;
@@ -69,6 +72,7 @@ int main()
 				find = strchr(sendMSG.buf, '\n');
 				if (find)
 				*find = '\0';
+				// "bye" is the quit code
 				if (!strncasecmp(sendMSG.buf, "bye", 3))
 				{
 					sendMSG.op = EXIT;
@@ -98,6 +102,7 @@ void process(int client_fd)
 {
 	int len;
 	struct CLIENTMSG clientMSG;
+	// receive message and show them
 	while (1)
 	{
 		bzero(&clientMSG, sizeof(clientMSG));
@@ -113,5 +118,3 @@ void process(int client_fd)
 		}
 	}
 }
-
-//192.168.1.223:12345
