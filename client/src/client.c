@@ -50,22 +50,18 @@ int main()
 	poll_fds[1].events = POLLIN | POLLRDHUP;
 	poll_fds[1].revents = 0;
 
-	int pipefd[2];
-	ret = pipe(pipefd);
-	assert(ret != -1);
-
 	while (1)
 	{
 		//printf("0");
 		ret = poll(poll_fds, 2, -1);
 		if (ret < 0)
 		{
-			printf("poll failure\n");
+			printf("poll failure.\n");
 			break;
 		}
 		if (poll_fds[1].revents & POLLRDHUP)
 		{
-			printf("lost connection with server");
+			printf("lost connection with server.\n");
 			break;
 		}
 		if (poll_fds[1].revents & POLLIN)
@@ -84,9 +80,9 @@ int main()
 				send(client_fd, &sendMSG, sizeof(sendMSG), 0);
 			}
 			else if (clientMSG.op == USER)
-				printf("user %s is login\n", clientMSG.user_name);
+				printf("user %s is login.\n", clientMSG.user_name);
 			else if (clientMSG.op == EXIT)
-				printf("user %s is logout\n", clientMSG.user_name);
+				printf("user %s is logout.\n", clientMSG.user_name);
 			else if (clientMSG.op == MSG)
 				printf("%s: %s\n", clientMSG.user_name, clientMSG.buf);
 		}

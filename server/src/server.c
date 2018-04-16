@@ -16,6 +16,7 @@ const unsigned int SERVER_PORT = 12345;
 
 void *func(void *args);
 void process(struct CLIENT* client);
+void sendmsg_to_all(struct CLIENTMSG* sendMSG, int msg_length);
 
 struct CLIENT head;
 
@@ -61,7 +62,7 @@ int main()
 		socklen_t CLIENT_LENGTH = sizeof(client_addr); 
 		int client_fd = accept(server_fd, (struct sockaddr*)&client_addr, &CLIENT_LENGTH);
 		assert(client_fd > 0);
-		printf("client_fd: %d\n", client_fd);
+		printf("client_fd: %d.\n", client_fd);
 
 		// initialize new client
 		struct CLIENT* new_client = (struct CLIENT*)malloc(sizeof(struct CLIENT));
@@ -80,11 +81,11 @@ int main()
 		// create new thread to process new client
 		err = pthread_create(&tid, NULL, func, (void*)new_client);
 		if (!err)
-			printf("thread created\n");
+			printf("thread created.\n");
 	}
 
 	close(server_fd);
-	printf("server closed\n");
+	printf("server closed.\n");
 	return 0;
 }
 
@@ -100,7 +101,7 @@ void* func(void *args)
 	free(client);
 	client = NULL;
 
-	printf("thread exit\n");
+	printf("thread exit.\n");
 	pthread_exit(NULL);
 }
 
@@ -112,14 +113,14 @@ void process(struct CLIENT* client)
 
 	// send ok to the client
 	sendMSG.op = OK;
-	strcpy(sendMSG.buf, "hi");
+	strcpy(sendMSG.buf, "hi.");
 	send(client->sockfd, &sendMSG, sizeof(sendMSG), 0);
 
 	// processing loop
 	while (1)
 	{
-		bzero(&sendMSG, sizeof(sendMSG));
 		bzero(&recvMSG, sizeof(recvMSG));
+		bzero(&sendMSG, sizeof(sendMSG));
 
 		// get message
 		len = recv(client->sockfd, &recvMSG, sizeof(recvMSG), 0);
@@ -128,51 +129,48 @@ void process(struct CLIENT* client)
 			sendMSG.op = EXIT;
 			memcpy(sendMSG.user_name, client->user_name, strlen(client->user_name));
 			// tell all clients that a client quit
-			struct CLIENT* temp = head.next_client;
-			while (temp != NULL)
-			{
-				if (strcmp(temp->user_name, recvMSG.user_name))
-					send(temp->sockfd, &sendMSG, sizeof(sendMSG), 0);
-				temp = temp->next_client;
-			}
+			sendmsg_to_all(&sendMSG, sizeof(sendMSG));
 			break;
 		}
 		if (len > 0)
 		{
+			memcpy(sendMSG.user_name, client->user_name, strlen(client->user_name));
 			if (recvMSG.op == USER) // new client
 			{
 				sendMSG.op = USER;
 				memcpy(client->user_name, recvMSG.user_name, strlen(recvMSG.user_name));
-				printf("user %s login from %s:%d\n", client->user_name, inet_ntoa(client->client_addr.sin_addr), ntohs(client->client_addr.sin_port));
+				memcpy(sendMSG.user_name, client->user_name, strlen(client->user_name));
+				printf("user %s login from %s:%d.\n", client->user_name, inet_ntoa(client->client_addr.sin_addr), ntohs(client->client_addr.sin_port));
+				// show all clients a new comer
+				sendmsg_to_all(&sendMSG, sizeof(sendMSG));
 			}
-			if (recvMSG.op == EXIT) // client quit
+			else if (recvMSG.op == EXIT) // client quit
 			{
 				sendMSG.op = EXIT;
-				memcpy(sendMSG.user_name, client->user_name, strlen(recvMSG.user_name));
+				printf("%s left the server.\n", client->user_name);
 				// tell all clients
-				struct CLIENT *temp = head.next_client;
-				while (temp != NULL)
-				{
-					send(temp->sockfd, &sendMSG, sizeof(sendMSG), 0);
-					temp = temp->next_client;
-				}
+				sendmsg_to_all(&sendMSG, sizeof(sendMSG));
 				break;
 			}
-			if (recvMSG.op == MSG) // normal message received
+			else if (recvMSG.op == MSG) // normal message received
 			{
 				sendMSG.op = MSG;
-				printf("%s: %s\n", recvMSG.user_name, recvMSG.buf);
-			}
-			memcpy(sendMSG.user_name, recvMSG.user_name, strlen(recvMSG.user_name));
-			memcpy(sendMSG.buf, recvMSG.buf, strlen(recvMSG.buf));
-			// send the received message to all clients
-			struct CLIENT *temp = head.next_client;
-			while (temp != NULL)
-			{
-				if (strcmp(temp->user_name, sendMSG.user_name))
-					send(temp->sockfd, &sendMSG, sizeof(sendMSG), 0);
-				temp = temp->next_client;
+				printf("%s: %s.\n", recvMSG.user_name, recvMSG.buf);
+				memcpy(sendMSG.buf, recvMSG.buf, strlen(recvMSG.buf));
+				// send the received message to all clients
+				sendmsg_to_all(&sendMSG, sizeof(sendMSG));
 			}
 		}
+	}
+}
+
+void sendmsg_to_all(struct CLIENTMSG* sendMSG, int msg_length)
+{
+	struct CLIENT *temp = head.next_client;
+	while (temp != NULL)
+	{
+		if (strcmp(temp->user_name, sendMSG->user_name))
+			send(temp->sockfd, sendMSG, msg_length, 0);
+		temp = temp->next_client;
 	}
 }
