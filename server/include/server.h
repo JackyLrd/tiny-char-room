@@ -3,11 +3,11 @@
 #define MSG_LENGTH 1024
 #define CLIENT_NAME_LENGTH 256
 
-const unsigned int INIT = 0;
-const unsigned int OK = 1;
-const unsigned int EXIT = 2;
-const unsigned int MSG = 3;
-const unsigned int USER = 4;
+#define INIT 0
+#define OK 1
+#define EXIT 2
+#define MSG 3
+#define USER 4
 
 struct CLIENTMSG
 {

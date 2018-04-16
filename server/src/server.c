@@ -100,6 +100,7 @@ void* func(void *args)
 	free(client);
 	client = NULL;
 
+	printf("thread exit\n");
 	pthread_exit(NULL);
 }
 
@@ -111,6 +112,7 @@ void process(struct CLIENT* client)
 
 	// send ok to the client
 	sendMSG.op = OK;
+	strcpy(sendMSG.buf, "hi");
 	send(client->sockfd, &sendMSG, sizeof(sendMSG), 0);
 
 	// processing loop
@@ -124,6 +126,7 @@ void process(struct CLIENT* client)
 		if (len == 0) // client connection closed
 		{
 			sendMSG.op = EXIT;
+			memcpy(sendMSG.user_name, client->user_name, strlen(client->user_name));
 			// tell all clients that a client quit
 			struct CLIENT* temp = head.next_client;
 			while (temp != NULL)
