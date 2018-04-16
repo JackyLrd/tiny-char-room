@@ -1,46 +1,36 @@
 #define _GNU_SOURCE 1
 #include <stdio.h>
-#include <stdlib.h>
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <bits/socket.h>
-#include <netinet/in.h>
 #include <arpa/inet.h>
-#include <string.h>
-#include <signal.h>
 #include <assert.h>
 #include <unistd.h>
-#include <pthread.h>
 #include <poll.h>
-#include <fcntl.h> 
-#include "../include/client.h"
+#include "../include/client.hpp"
+
+#include <string>
 
 int main()
 {
 	int client_fd;
-	struct sockaddr_in server_addr;
-	pthread_t tid;
-	struct CLIENTMSG sendMSG;
-	bzero(&sendMSG, sizeof(sendMSG));
-	struct CLIENTMSG clientMSG;
-	struct client_args* args;
+	sockaddr_in server_addr;
+	CLIENTMSG sendMSG;
+	CLIENTMSG clientMSG;
 
 	// create client socket fd
 	client_fd = socket(PF_INET, SOCK_STREAM, 0);
 	assert(client_fd >= 0);
 
 	// initialize server address
-	bzero(&server_addr, sizeof(server_addr));
+	memset(&server_addr, 0, sizeof(server_addr));
 	server_addr.sin_family = PF_INET;
 	server_addr.sin_port = htons(12345);
 	server_addr.sin_addr.s_addr = inet_addr("192.168.1.223");
 
 	// connect to server
-	int ret = connect(client_fd, (struct sockaddr*)&server_addr, sizeof(struct sockaddr));
+	int ret = connect(client_fd, (sockaddr*)&server_addr, sizeof(sockaddr));
 	assert(ret == 0);
 
 	// create poll fd
-	struct pollfd poll_fds[2];
+	pollfd poll_fds[2];
 
 	// set poll fd
 	poll_fds[0].fd = 0;
@@ -66,7 +56,7 @@ int main()
 		}
 		if (poll_fds[1].revents & POLLIN)
 		{
-			bzero(&clientMSG, sizeof(clientMSG));
+			memset(&clientMSG, 0, sizeof(clientMSG));
 			int len = recv(client_fd, &clientMSG, sizeof(clientMSG), 0);
 			if (clientMSG.op == OK)
 			{
@@ -95,7 +85,7 @@ int main()
 			if (find)
 			*find = '\0';
 			// "bye" is the quit code
-			if (!strncasecmp(sendMSG.buf, "bye", 3))
+			if (std::string(sendMSG.buf) == std::string("bye"))
 			{
 				sendMSG.op = EXIT;
 				send(client_fd, &sendMSG, sizeof(sendMSG), 0);

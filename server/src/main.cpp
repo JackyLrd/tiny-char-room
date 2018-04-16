@@ -10,7 +10,7 @@
 #include <assert.h>
 #include <unistd.h>
 #include <pthread.h>
-#include "../include/server.h"
+#include "../include/server.hpp"
 
 const unsigned int SERVER_PORT = 12345;
 
@@ -127,6 +127,7 @@ void process(struct CLIENT* client)
 		if (len == 0) // client connection closed
 		{
 			sendMSG.op = EXIT;
+			printf("%s left the server.\n", client->user_name);
 			memcpy(sendMSG.user_name, client->user_name, strlen(client->user_name));
 			// tell all clients that a client quit
 			sendmsg_to_all(&sendMSG, sizeof(sendMSG));
@@ -155,7 +156,7 @@ void process(struct CLIENT* client)
 			else if (recvMSG.op == MSG) // normal message received
 			{
 				sendMSG.op = MSG;
-				printf("%s: %s.\n", recvMSG.user_name, recvMSG.buf);
+				printf("%s: %s\n", recvMSG.user_name, recvMSG.buf);
 				memcpy(sendMSG.buf, recvMSG.buf, strlen(recvMSG.buf));
 				// send the received message to all clients
 				sendmsg_to_all(&sendMSG, sizeof(sendMSG));
