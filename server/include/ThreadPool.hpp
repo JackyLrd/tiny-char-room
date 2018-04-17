@@ -1,7 +1,8 @@
+#ifndef ThreadPool_H_
+#define ThreadPool_H_
+
 #include <pthread.h>
-#include <deque>
-#include <vector>
-#include <stdio.h>
+#include <cstdio>
 #include <assert.h>
 #include <cstdlib>
 #include "Job.hpp"
@@ -19,10 +20,12 @@ class ThreadPool
 		ThreadPool(const ThreadPool&) = delete;
 		ThreadPool& operator=(const ThreadPool&) = delete;
 		ThreadPool(int thread_num);
-		void add_job(Job job);
+		void add_job(Job* job);
 		void terminate();
 	private:
 		Thread* threads;
 		int max_thread_num;
 		int state;
 };
+
+#endif

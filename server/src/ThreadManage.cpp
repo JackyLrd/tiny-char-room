@@ -4,7 +4,7 @@ ThreadManage::ThreadManage(): num_of_thread(10), pool(new ThreadPool(num_of_thre
 
 ThreadManage::ThreadManage(int num): num_of_thread(num), pool(new ThreadPool(num_of_thread)) {}
 
-void ThreadManage::run(Job job)
+void ThreadManage::run(Job* job)
 {
 	pool->add_job(job);
 }
