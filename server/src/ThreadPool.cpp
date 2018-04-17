@@ -25,7 +25,9 @@ void ThreadPool::terminate()
 
 	for (unsigned long long i = 0; i < max_thread_num; ++i)
 	{
-		threads[i].set_state(ABORT);
+		threads[i].set_abort();
+		//printf("after set: %d\n", threads[i].get_state());
+		threads[i].signal();
 	}
 
 	unsigned long long i;
@@ -33,10 +35,10 @@ void ThreadPool::terminate()
 	{
 		for (i = 0; i < max_thread_num; ++i)
 		{
-			assert(threads[i].get_state() != ABORT);
 			if (threads[i].get_state() != EXIT)
 				break;
 		}
+		// printf("%u\n", i);
 		if (i == max_thread_num)
 			break;
 	}
@@ -45,4 +47,17 @@ void ThreadPool::terminate()
 
 	if (threads)
 		delete[] threads;
+
+	state = TERMINATED;
+}
+
+void ThreadPool::show_thread_state()
+{
+	int count = 0;
+	for (int i = 0; i < max_thread_num; ++i)
+	{
+		count += threads[i].get_job_count();
+		printf("thread 0x%x finished %d jobs, state is %d\n", threads[i].get_tid(), threads[i].get_job_count(), threads[i].get_state());
+	}
+	printf("%d jobs finished.\n", count);
 }

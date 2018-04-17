@@ -9,6 +9,11 @@ void ThreadManage::run(Job* job)
 	pool->add_job(job);
 }
 
+void ThreadManage::show_thread_state()
+{
+	pool->show_thread_state();
+}
+
 void ThreadManage::terminate()
 {
 	pool->terminate();

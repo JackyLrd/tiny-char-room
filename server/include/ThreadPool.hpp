@@ -22,6 +22,7 @@ class ThreadPool
 		ThreadPool(int thread_num);
 		void add_job(Job* job);
 		void terminate();
+		void show_thread_state();
 	private:
 		Thread* threads;
 		int max_thread_num;

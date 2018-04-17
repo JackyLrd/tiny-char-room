@@ -10,6 +10,7 @@ class ThreadManage
 		ThreadManage();
 		ThreadManage(int num);
 		void run(Job* job);
+		void show_thread_state();
 		void terminate();
 		virtual ~ThreadManage();
 	private:

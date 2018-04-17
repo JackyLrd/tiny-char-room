@@ -23,7 +23,7 @@ CLIENT head;
 
 int main()
 {
-	pthread_t tid;
+	pthread_t tid; 
 	int err;
 
 	int server_fd, client_fd;

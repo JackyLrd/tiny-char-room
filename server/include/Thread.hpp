@@ -9,8 +9,7 @@
 const int IDLE = 0;
 const int WORKING = 1;
 const int WAITING = 2;
-const int ABORT = 3;
-const int EXIT = 4;
+const int EXIT = 3;
 
 class Thread
 {
@@ -24,7 +23,9 @@ class Thread
 		void add_job(Job* job);
 		void run();
 		const int get_state();
-		void set_state(int state);
+		const int get_job_count();
+		const pthread_t get_tid();
+		void set_abort();
 		static void* start_rountine(void* args);
 		void execute();
 	private:
@@ -32,6 +33,8 @@ class Thread
 		pthread_cond_t queue_ready;
 		std::list<Job*> job_queue;
 		int state;
+		int job_count;
+		bool is_abort;
 		pthread_t tid;
 };
 
