@@ -10,6 +10,7 @@ const int IDLE = 0;
 const int WORKING = 1;
 const int WAITING = 2;
 const int ABORT = 3;
+const int EXIT = 4;
 
 class Thread
 {
@@ -22,6 +23,8 @@ class Thread
 		void wait();
 		void add_job(Job* job);
 		void run();
+		const int get_state();
+		void set_state(int state);
 		static void* start_rountine(void* args);
 		void execute();
 	private:
