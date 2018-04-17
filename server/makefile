@@ -12,7 +12,13 @@ BIN_TARGET = ${BIN}/${TARGET}
 CC = clang++
 CFLAGS = -D REENTRANT -std=c++11
 
-${BIN_TARGET}:${OBJECT}
+all: ${BIN_TARGET}
+
+MKDIR:
+	if [ ! -d ${BUILD} ]; then mkdir ${BUILD}; fi
+	if [ ! -d ${BIN} ]; then mkdir ${BIN}; fi
+
+${BIN_TARGET}:MKDIR ${OBJECT}
 	$(CC) -o $@ -lpthread ${OBJECT}
 
 ${BUILD}/%.o:${SRC}/%.cpp

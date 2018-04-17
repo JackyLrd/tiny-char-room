@@ -83,18 +83,18 @@ void Thread::execute()
 		lock();
 		if (state == IDLE)
 			state = WAITING;
+		printf("thread 0x%lu is waiting for a job.\n", tid);
 		while (job_queue.empty())
 		{
-			//printf("thread 0x%u is waiting for a job.\n", tid);
-			wait();
 			if (is_abort)
 				break;
+			wait();
 		}
 
 		if (is_abort)
 			break;
 
-		//printf("thread 0x%u starts working.\n", tid);
+		printf("thread 0x%lu starts working.\n", tid);
 		assert(!job_queue.empty());
 
 		Job* job = job_queue.front();
@@ -106,7 +106,7 @@ void Thread::execute()
 			state = WORKING;
 
 		job->run();
-		//printf("thread 0x%u's job finished.\n", tid);
+		printf("thread 0x%lu's job finished.\n", tid);
 		++job_count;
 		delete job;
 
@@ -115,7 +115,7 @@ void Thread::execute()
 	}
 
 	state = EXIT;
-	//printf("thread 0x%u exits.\n", tid);
+	printf("thread 0x%lu exits.\n", tid);
 	pthread_mutex_destroy(&queue_lock);
 	pthread_cond_destroy(&queue_ready);
 	pthread_exit(NULL);
