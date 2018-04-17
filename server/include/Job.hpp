@@ -1,6 +1,8 @@
 class Job
 {
 	public:
-		void* (*process)(void* args);
+		Job();
+		Job(void* (*process)(void*), void* args);
+		void* (*process)(void*);
 		void* args;
 };

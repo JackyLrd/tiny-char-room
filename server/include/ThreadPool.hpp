@@ -1,19 +1,28 @@
 #include <pthread.h>
 #include <deque>
 #include <vector>
+#include <stdio.h>
+#include <assert.h>
+#include <cstdlib>
 #include "Job.hpp"
-#include "WorkerThread.hpp"
+#include "Thread.hpp"
+
+const int INIT = 0;
+const int RUNNING = 1;
+const int TERMINATING = 2;
+const int TERMINATED = 3;
 
 class ThreadPool
 {
 	public:
+		ThreadPool() = delete;
+		ThreadPool(const ThreadPool&) = delete;
+		ThreadPool& operator=(const ThreadPool&) = delete;
 		ThreadPool(int thread_num);
-		int add_job(Job job);
-		int terminate();
+		void add_job(Job job);
+		void terminate();
 	private:
-		pthread_mutex_t queue_lock;
-		pthread_cond_t queue_ready;
-		std::deque<Job> job_queue;
-		std::vector<WorkerThread> threads;
+		Thread* threads;
 		int max_thread_num;
+		int state;
 };

@@ -11,6 +11,7 @@
 #include <unistd.h>
 #include <pthread.h>
 #include "../include/server.hpp"
+#include "../include/ThreadManage.hpp"
 
 const unsigned int SERVER_PORT = 12345;
 
