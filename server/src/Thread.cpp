@@ -4,15 +4,40 @@ Thread::Thread()
 {
 	pthread_mutex_init(&queue_lock, NULL);
 	pthread_cond_init(&queue_ready, NULL);
-	state = IDLE;
+	state = THREAD_IDLE;
 	job_count = 0;
 	is_abort = false;
-	tid = 0;
+	thread_id = 0;
 }
 
-void Thread::set_tid(pthread_t tid)
+void Thread::set_abort()
 {
-	this->tid = tid;
+	is_abort = true;
+}
+
+void Thread::set_id(int id)
+{
+	thread_id = id;
+}
+
+const int Thread::get_id()
+{
+	return thread_id;
+}
+
+const pthread_t Thread::get_tid()
+{
+	return tid;
+}
+
+const int Thread::get_state()
+{
+	return state;
+}
+
+const int Thread::get_job_count()
+{
+	return job_count;
 }
 
 void Thread::lock()
@@ -37,85 +62,78 @@ void Thread::wait()
 
 void Thread::add_job(Job* job)
 {
+	// lock the queue before adding a job
 	lock();
 	job_queue.push_back(job);
-	signal();
 	unlock();
+	signal();
 }
 
-void Thread::run()
-{
-	pthread_create(&tid, NULL, start_rountine, this);
-}
-
-const int Thread::get_state()
-{
-	return state;
-}
-
-const int Thread::get_job_count()
-{
-	return job_count;
-}
-
-const pthread_t Thread::get_tid()
-{
-	return tid;
-}
-
-void Thread::set_abort()
-{
-	is_abort = true;
-}
-
-void* Thread::start_rountine(void* args)
+void* Thread::start_routine(void* args)
 {
 	Thread* thread = (Thread*)(args);
 	thread->execute();
 	return NULL;
 }
 
+void Thread::run()
+{
+	// thread is created here
+	pthread_create(&tid, NULL, start_routine, this);
+}
+
 void Thread::execute()
 {
-	pthread_t tid = pthread_self();
+	// pthread_t tid = pthread_self();
+	// running loop
 	while (1)
 	{
+		// lock the queue before getting a job
 		lock();
-		if (state == IDLE)
-			state = WAITING;
-		printf("thread 0x%lu is waiting for a job.\n", tid);
-		while (job_queue.empty())
+		assert(state == THREAD_IDLE);
+		state = THREAD_WAITING;
+		// printf("thread %d is waiting for a job.\n", thread_id);
+		// if the job queue is empty and the pool is running, wait for it
+		while (job_queue.empty() && !is_abort)
 		{
-			if (is_abort)
-				break;
 			wait();
 		}
 
-		if (is_abort)
+		// if the pool is shutting down and the job queue is empty, exit
+		if (is_abort && job_queue.empty())
+		{
+			// unlock the queue before exit
+			unlock();
 			break;
+		}
 
-		printf("thread 0x%lu starts working.\n", tid);
+		// printf("thread %d starts working.\n", thread_id);
 		assert(!job_queue.empty());
 
+		// get a job
 		Job* job = job_queue.front();
 		job_queue.pop_front();
 		
+		// unlock the queue after getting a job
 		unlock();
 
-		if (state == WAITING)
-			state = WORKING;
+		assert(state == THREAD_WAITING);
+		state = THREAD_WORKING;
 
+		// run the job
 		job->run();
-		printf("thread 0x%lu's job finished.\n", tid);
+		// printf("thread %d's job finished.\n", thread_id);
 		++job_count;
 		delete job;
+		job = NULL;
 
-		if (state == WORKING)
-			state = IDLE;
+		assert(state == THREAD_WORKING);
+		state = THREAD_IDLE;
 	}
 
-	state = EXIT;
-	printf("thread 0x%lu exits.\n", tid);
+	// release the resources before exiting
+	state = THREAD_EXIT;
+	printf("thread %d exits.\n", thread_id);
 	pthread_mutex_destroy(&queue_lock);
 	pthread_cond_destroy(&queue_ready);
 	pthread_exit(NULL);

@@ -1,3 +1,9 @@
+/*
+ * @Author: JackyLrd 
+ * @Date: 2018-04-18 02:07:24 
+ * @Last Modified by:   JackyLrd 
+ * @Last Modified time: 2018-04-18 02:07:24 
+ */
 #include "../include/ThreadManage.hpp"
 
 ThreadManage::ThreadManage(): num_of_thread(10), pool(new ThreadPool(num_of_thread)) {}
@@ -23,4 +29,5 @@ ThreadManage::~ThreadManage()
 {
 	if (pool)
 		delete pool;
+	pool = NULL;
 }
