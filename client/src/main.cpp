@@ -85,7 +85,7 @@ int main()
 				}
 				if (events[i].events & EPOLLIN)
 				{
-					memset(&clientMSG, 0, sizeof(clientMSG));
+					memset(&clientMSG, '\0', sizeof(clientMSG));
 					int len = recv(client_fd, &clientMSG, sizeof(clientMSG), 0);
 					if (clientMSG.op == OK)
 					{

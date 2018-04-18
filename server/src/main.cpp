@@ -1,17 +1,17 @@
-#include <stdio.h>
-#include <stdlib.h>
+#include <cstdio>
+#include <cstdlib>
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <bits/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
-#include <string.h>
+#include <cstring>
 #include <signal.h>
 #include <assert.h>
 #include <unistd.h>
 #include <pthread.h>
 #include "../include/server.hpp"
-//#include "../include/ThreadManage.hpp"
+#include "../include/ThreadManage.hpp"
 
 const unsigned int SERVER_PORT = 12345;
 
